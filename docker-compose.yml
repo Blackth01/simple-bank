@@ -1,0 +1,50 @@
+version: "3"
+services:
+  # Web service layer
+  nginx:
+    image: nginx:1.13
+    volumes:
+      - "./app:/var/www"
+      - "./nginx/nginx.conf:/etc/nginx/nginx.conf"
+    ports:
+      - "8080:80"
+    depends_on:
+      - php
+
+  # Application service layer
+  php:
+    build:
+      args:
+        user: admin
+        uid: 1000
+      context: ./php
+    volumes:
+      - "./app:/var/www"
+    depends_on:
+      - mariadb
+      - composer_installation
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_PASS=Dinossaur
+    command: bash -c "until [ -f /var/www/vendor/autoload.php ]; do sleep 1; done && php artisan migrate && php-fpm"
+
+  composer_installation:
+    container_name: composer_installation
+    image: composer
+    volumes:
+      - ./app:/app
+    command: bash -c "composer install --ignore-platform-reqs"
+
+# Data persistence service layer
+  mariadb:
+    image: mariadb:10.11
+    volumes:
+      - "db_data3:/var/lib/mysql"
+      - "./db:/docker-entrypoint-initdb.d"
+    ports:
+      - "33606:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=Dinossaur
+
+volumes:
+  db_data3:
