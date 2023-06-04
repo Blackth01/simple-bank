@@ -14,9 +14,6 @@ services:
   # Application service layer
   php:
     build:
-      args:
-        user: admin
-        uid: 1000
       context: ./php
     volumes:
       - "./app:/var/www"
@@ -26,7 +23,7 @@ services:
     environment:
       - MYSQL_USER=root
       - MYSQL_PASS=Dinossaur
-    command: bash -c "until [ -f /var/www/vendor/autoload.php ]; do sleep 1; done && php artisan migrate && php-fpm"
+    command: bash -c "chown -R www-data:www-data /var/www && until [ -f /var/www/vendor/autoload.php ]; do sleep 1; done && php artisan migrate --force && php-fpm"
 
   composer_installation:
     container_name: composer_installation
